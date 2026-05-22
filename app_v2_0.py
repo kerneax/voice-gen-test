@@ -445,7 +445,7 @@ def run_demo(
 ):
     demo = VoxCPMDemo(model_id=model_id)
     interface = create_demo_interface(demo)
-    interface.queue(max_size=10, default_concurrency_limit=1).launch(
+    interface.queue(max_size=99, default_concurrency_limit=99).launch(
         server_name=server_name,
         server_port=server_port,
         show_error=show_error,
