@@ -69,5 +69,5 @@ jobs:
 
       - name: Push and Run Notebook
         run: |
-          kaggle kernels push -p ./ -t 15300 --accelerator "NvidiaTeslaT4"
+          kaggle kernels push -p ./ -t 15300
           echo "Done."
