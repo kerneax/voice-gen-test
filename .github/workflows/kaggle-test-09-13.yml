@@ -34,7 +34,7 @@ jobs:
 
       - name: Pull Latest Notebook
         run: |
-          kaggle kernels pull -p ./ "$KERNEL_SLUG";
+          kaggle kernels pull -p ./ "$KERNEL_SLUG" --accelerator "NvidiaTeslaT4";
           echo "Successfully pulled: $KERNEL_SLUG"
 
       - name: Create Kernel Metadata
