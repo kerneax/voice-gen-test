@@ -1,18 +1,22 @@
 name: Kaggle Test 01-05
 
 on:
-#  schedule:
-#    - cron: '45 0 * * *' # 新加坡时间 0:45
   workflow_dispatch:
+    inputs:
+      use_id:
+        description: "Which account would you want to use to run the task?"
+        required: true
+        default: "1"
+        type: string
 
 jobs:
   kaggle-task:
     runs-on: ubuntu-latest
     env:
-      KAGGLE_USERNAME_01_05: ${{ secrets.KAGGLE_USERNAME_01_05 }}
-      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN_01_05 }}
-      KERNEL_SLUG: ${{ secrets.KERNEL_SLUG }}
-      KERNEL_DATASET: ${{ secrets.KERNEL_DATASET }}
+      KAGGLE_USERNAME: ${{ secrets[format('KAGGLE_USERNAME_{0}', inputs.use_id)] }}
+      KAGGLE_API_TOKEN: ${{ secrets[format('KAGGLE_API_TOKEN_{0}', inputs.use_id)] }}
+      KERNEL_SLUG: ${{ secrets.CPM_KERNEL_SLUG }}
+      KERNEL_DATASET: ${{ secrets.CPM_KERNEL_DATASET }}
 
     steps:
       - name: Checkout Repository
@@ -30,18 +34,21 @@ jobs:
 
       - name: Delete Temp Kernel
         run: |
-          kaggle kernels delete "${KAGGLE_USERNAME_01_05}/${KERNEL_SLUG}-temp" -y || echo "Temp kernel not found or already deleted."
+          kaggle kernels delete "${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp" -y || echo "Temp kernel not found or already deleted."
 
-      - name: Pull Latest Notebook
+      - name: Download Tester Notebook
         run: |
-          kaggle kernels pull -p ./ "$KERNEL_SLUG";
-          echo "Successfully pulled: $KERNEL_SLUG"
+          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/cpm-test.ipynb" -O ${KERNEL_SLUG}.ipynb
+
+      - name: Modify Notebook
+        run: |
+          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_FRP_PORT_XXX/800${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
 
       - name: Create Kernel Metadata
         run: |
           FETCHED_FILE="${KERNEL_SLUG}.ipynb"
           
-          TEMP_ID="${KAGGLE_USERNAME_01_05}/${KERNEL_SLUG}-temp"
+          TEMP_ID="${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp"
           TEMP_TITLE="${KERNEL_SLUG}-temp"
           
           jq -n \
