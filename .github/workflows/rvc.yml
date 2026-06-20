@@ -17,6 +17,8 @@ jobs:
       KAGGLE_API_TOKEN: ${{ secrets[format('KAGGLE_API_TOKEN_{0}', inputs.use_id)] }}
       KERNEL_SLUG: ${{ secrets.RVC_KERNEL_SLUG }}
       KERNEL_DATASET: ${{ secrets.RVC_KERNEL_DATASET }}
+      GLOBAL_FRP_SERVER_ADDR: ${{ secrets.GLOBAL_FRP_SERVER_ADDR }}
+      GLOBAL_FRP_AUTH_TOKEN: ${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}
 
     steps:
       - name: Checkout Repository
@@ -35,11 +37,14 @@ jobs:
       - name: Delete Temp Kernel
         run: |
           kaggle kernels delete "${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp" -y || echo "Temp kernel not found or already deleted."
-
-      - name: Pull Latest Notebook
+      
+      - name: Download Tester Notebook
         run: |
-          kaggle kernels pull -p ./ "$KERNEL_SLUG";
-          echo "Successfully pulled: $KERNEL_SLUG"
+          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/rvc-test.ipynb" -O ${KERNEL_SLUG}.ipynb
+
+      - name: Modify Notebook
+        run: |
+          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${GLOBAL_FRP_SERVER_ADDR}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${GLOBAL_FRP_AUTH_TOKEN}/g; s/XXX_GLOBAL_FRP_PORT_XXX/801${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
 
       - name: Create Kernel Metadata
         run: |
