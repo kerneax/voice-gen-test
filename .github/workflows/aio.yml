@@ -1,0 +1,82 @@
+name: AIO Tester
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_id:
+        description: "Which account would you want to use to run the task?"
+        required: true
+        default: "1"
+        type: string
+
+jobs:
+  aio-task:
+    runs-on: ubuntu-latest
+    env:
+      KAGGLE_USERNAME: ${{ secrets[format('KAGGLE_USERNAME_{0}', inputs.use_id)] }}
+      KAGGLE_API_TOKEN: ${{ secrets[format('KAGGLE_API_TOKEN_{0}', inputs.use_id)] }}
+      KERNEL_SLUG: ${{ secrets.AIO_KERNEL_SLUG }}
+      KERNEL_DATASET_A: ${{ secrets.VOXCPM_KERNEL_DATASET }}
+      KERNEL_DATASET_B: ${{ secrets.RVC_KERNEL_DATASET }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install kaggle
+          sudo apt-get install jq -y
+
+      - name: Delete Temp Kernel
+        run: |
+          kaggle kernels delete "${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp" -y || echo "Temp kernel not found or already deleted."
+      
+      - name: Download Tester Notebook
+        run: |
+          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/rvc-test.ipynb" -O ${KERNEL_SLUG}.ipynb
+
+      - name: Modify Notebook
+        run: |
+          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_CURRENT_USER_ID_XXX/${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
+
+      - name: Create Kernel Metadata
+        run: |
+          FETCHED_FILE="${KERNEL_SLUG}.ipynb"
+          
+          TEMP_ID="${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp"
+          TEMP_TITLE="${KERNEL_SLUG}-temp"
+          
+          jq -n \
+            --arg id "$TEMP_ID" \
+            --arg title "$TEMP_TITLE" \
+            --arg dataset_a "$KERNEL_DATASET_A" \
+            --arg dataset_b "$KERNEL_DATASET_B" \
+            --arg code_file "$FETCHED_FILE" \
+            '{
+              "id": $id,
+              "title": $title,
+              "code_file": $code_file,
+              "language": "python",
+              "kernel_type": "notebook",
+              "is_private": "true",
+              "enable_gpu": "true",
+              "enable_tpu": "false",
+              "enable_internet": "true",
+              "dataset_sources": [$dataset_a,$dataset_b],
+              "competition_sources": [],
+              "kernel_sources": [],
+              "model_sources": []
+            }' > kernel-metadata.json
+          
+          echo "Generated kernel-metadata.json with ID: $TEMP_ID"
+
+      - name: Push and Run Notebook
+        run: |
+          kaggle kernels push -p ./ -t 15300 --accelerator "NvidiaTeslaT4"
+          echo "Done."
