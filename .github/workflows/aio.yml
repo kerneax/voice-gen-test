@@ -39,7 +39,7 @@ jobs:
       
       - name: Download Tester Notebook
         run: |
-          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/rvc-test.ipynb" -O ${KERNEL_SLUG}.ipynb
+          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/aio.ipynb" -O ${KERNEL_SLUG}.ipynb
 
       - name: Modify Notebook
         run: |
