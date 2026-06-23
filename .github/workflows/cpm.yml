@@ -42,7 +42,7 @@ jobs:
 
       - name: Modify Notebook
         run: |
-          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_FRP_PORT_XXX/801${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
+          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_FRP_PORT_XXX/800${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
 
       - name: Create Kernel Metadata
         run: |
