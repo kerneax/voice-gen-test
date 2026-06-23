@@ -1,4 +1,4 @@
-name: Kaggle Test 01-05
+name: VOXCPM Test Trigger
 
 on:
   workflow_dispatch:
@@ -10,13 +10,13 @@ on:
         type: string
 
 jobs:
-  kaggle-task:
+  voxcpm-kaggle-task:
     runs-on: ubuntu-latest
     env:
       KAGGLE_USERNAME: ${{ secrets[format('KAGGLE_USERNAME_{0}', inputs.use_id)] }}
       KAGGLE_API_TOKEN: ${{ secrets[format('KAGGLE_API_TOKEN_{0}', inputs.use_id)] }}
-      KERNEL_SLUG: ${{ secrets.CPM_KERNEL_SLUG }}
-      KERNEL_DATASET: ${{ secrets.CPM_KERNEL_DATASET }}
+      KERNEL_SLUG: ${{ secrets.VOXCPM_KERNEL_SLUG }}
+      KERNEL_DATASET: ${{ secrets.VOXCPM_KERNEL_DATASET }}
 
     steps:
       - name: Checkout Repository
@@ -35,14 +35,14 @@ jobs:
       - name: Delete Temp Kernel
         run: |
           kaggle kernels delete "${KAGGLE_USERNAME}/${KERNEL_SLUG}-temp" -y || echo "Temp kernel not found or already deleted."
-
+      
       - name: Download Tester Notebook
         run: |
-          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/cpm-test.ipynb" -O ${KERNEL_SLUG}.ipynb
+          wget "https://raw.githubusercontent.com/kerneax/voice-gen-test/refs/heads/main/voxcpm.ipynb" -O ${KERNEL_SLUG}.ipynb
 
       - name: Modify Notebook
         run: |
-          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_FRP_PORT_XXX/800${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
+          sed -i 's/XXX_GLOBAL_FRP_SERVER_ADDR_XXX/${{ secrets.GLOBAL_FRP_SERVER_ADDR }}/g; s/XXX_GLOBAL_FRP_AUTH_TOKEN_XXX/${{ secrets.GLOBAL_FRP_AUTH_TOKEN }}/g; s/XXX_GLOBAL_FRP_PORT_XXX/801${{ inputs.use_id }}/g' ${KERNEL_SLUG}.ipynb
 
       - name: Create Kernel Metadata
         run: |
@@ -76,5 +76,5 @@ jobs:
 
       - name: Push and Run Notebook
         run: |
-          kaggle kernels push -p ./ -t 15300
+          kaggle kernels push -p ./ -t 15300 --accelerator "NvidiaTeslaT4"
           echo "Done."
