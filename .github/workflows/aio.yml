@@ -30,8 +30,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install kaggle==2.2.3
           pip install kagglesdk==0.1.31
+          pip install kaggle==2.2.3
           sudo apt-get install jq -y
 
       - name: Delete Temp Kernel
